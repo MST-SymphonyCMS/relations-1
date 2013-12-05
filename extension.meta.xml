@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<extension id="relation" status="released" xmlns="http://symphony-cms.com/schemas/extension/1.0">
+	<name>Relation</name>
+
+	<description>Relation field with different views.</description>
+
+	<repo type="github">https://github.com/vald-ghita/relation_field</repo>
+
+	<types>
+		<type>Field Types</type>
+	</types>
+
+	<authors>
+		<author>
+			<name github="vlad-ghita" symphony="vladG">Vlad Ghita</name>
+			<email>vlad_micutul@yahoo.com</email>
+			<website>http://www.xanderadvertising.com</website>
+		</author>
+	</authors>
+
+	<releases>
+		<release version="1.0.0" date="2013-12-05" min="2.3.4">
+			* First release.
+		</release>
+	</releases>
+</extension>
