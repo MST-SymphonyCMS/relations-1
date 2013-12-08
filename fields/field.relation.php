@@ -3,7 +3,7 @@
 	require_once FACE . '/interface.exportablefield.php';
 	require_once FACE . '/interface.importablefield.php';
 
-	class FieldSBL_Views extends Field implements ExportableField, ImportableField {
+	class FieldRelation extends Field implements ExportableField, ImportableField {
 
 		private static $cache = array();
 
@@ -13,30 +13,21 @@
 
 		public function __construct() {
 			parent::__construct();
+
 			$this->_name            = __('Relation');
 			$this->_required        = true;
 			$this->_showassociation = true;
 
-			`related_field_id` VARCHAR(255) NOT NULL,
-				`view` VARCHAR(255) NOT NULL default '',
-				`per_page` int(4) unsigned NOT NULL default '12',
-				`limit` int(4) unsigned NOT NULL default '0',
-				`show_create` enum('yes','no') NOT NULL default 'yes',
-				`show_edit` enum('yes','no') NOT NULL default 'yes',
-				`show_delete` enum('yes','no') NOT NULL default 'yes',
-				`show_association` enum('yes','no') NOT NULL default 'yes',
-
 			// Default settings
-			$this->set('show_column', 'no');
-			$this->set('show_association', 'yes');
-			$this->set('hide_when_prepopulated', 'no');
 			$this->set('required', 'yes');
-			$this->set('limit', 0);
 			$this->set('related_field_id', array());
-		}
-
-		public function canToggle() {
-			return ($this->get('allow_multiple_selection') == 'yes' ? false : true);
+			$this->set('show_association', 'yes');
+			$this->set('views', null);
+			$this->set('limit', 0);
+			$this->set('per_page', 0);
+			$this->set('show_create', 'yes');
+			$this->set('show_edit', 'yes');
+			$this->set('show_delete', 'yes');
 		}
 
 		public function canFilter() {
@@ -44,7 +35,7 @@
 		}
 
 		public function allowDatasourceOutputGrouping() {
-			return ($this->get('allow_multiple_selection') == 'yes' ? false : true);
+			return $this->get('limit') == 1;
 		}
 
 		public function allowDatasourceParamOutput() {
@@ -52,12 +43,15 @@
 		}
 
 		public function requiresSQLGrouping() {
-			return ($this->get('allow_multiple_selection') == 'yes' ? true : false);
+			return $this->get('limit') != 1;
 		}
 
-		/*-------------------------------------------------------------------------
-			Setup:
-		-------------------------------------------------------------------------*/
+		public function set($field, $value) {
+			if ($field == 'related_field_id' && !is_array($value)) {
+				$value = array_map('filter', explode(',', $value));
+			}
+			$this->_fields[$field] = $value;
+		}
 
 		public function createTable() {
 			return Symphony::Database()->query(
@@ -75,13 +69,6 @@
 		/*-------------------------------------------------------------------------
 			Utilities:
 		-------------------------------------------------------------------------*/
-
-		public function set($field, $value) {
-			if ($field == 'related_field_id' && !is_array($value)) {
-				$value = explode(',', $value);
-			}
-			$this->_fields[$field] = $value;
-		}
 
 		public function findOptions(array $existing_selection = null) {
 			$values = array();
@@ -137,23 +124,6 @@
 			return $values;
 		}
 
-		public function getToggleStates() {
-			$options = $this->findOptions();
-			$output  = $options[0]['values'];
-
-			if ($this->get('required') !== 'yes') {
-				$output[""] = __('None');
-			}
-
-			return $output;
-		}
-
-		public function toggleFieldData(array $data, $newState, $entry_id = null) {
-			$data['relation_id'] = $newState;
-
-			return $data;
-		}
-
 		public function fetchAssociatedEntryCount($value) {
 			return Symphony::Database()->fetchVar('count', 0, sprintf("
 					SELECT COUNT(*) as `count`
@@ -175,7 +145,7 @@
 		}
 
 		public function fetchAssociatedEntrySearchValue($data, $field_id = null, $parent_entry_id = null) {
-			// We dont care about $data, but instead $parent_entry_id
+			// We don't care about $data, but instead $parent_entry_id
 			if (!is_null($parent_entry_id)) {
 				return $parent_entry_id;
 			}
@@ -184,14 +154,14 @@
 				return $data;
 			}
 
-			$searchvalue = Symphony::Database()->fetchRow(0, sprintf("
+			$search_value = Symphony::Database()->fetchRow(0, sprintf("
 				SELECT `entry_id` FROM `tbl_entries_data_%d`
 				WHERE `handle` = '%s'
 				LIMIT 1",
 				$field_id, addslashes($data['handle'])
 			));
 
-			return $searchvalue['entry_id'];
+			return $search_value['entry_id'];
 		}
 
 		public function findEntriesForField(array $relation_id = array(), $field_id = null) {
@@ -351,7 +321,7 @@
 		 *
 		 * @return integer
 		 */
-		public function fetchIDfromValue($value) {
+		public function fetchIdFromValue($value) {
 			$id                = null;
 			$related_field_ids = $this->get('related_field_id');
 
@@ -387,15 +357,6 @@
 		/*-------------------------------------------------------------------------
 			Settings:
 		-------------------------------------------------------------------------*/
-
-		public function findDefaults(array &$settings) {
-			if (!isset($settings['allow_multiple_selection'])) {
-				$settings['allow_multiple_selection'] = 'no';
-			}
-			if (!isset($settings['show_association'])) {
-				$settings['show_association'] = 'yes';
-			}
-		}
 
 		public function displaySettingsPanel(XMLElement &$wrapper, $errors = null) {
 			parent::displaySettingsPanel($wrapper, $errors);
@@ -643,8 +604,6 @@
 		}
 
 		public function prepareTableValue($data, XMLElement $link = null, $entry_id = null) {
-			$result = array();
-
 			if (!is_array($data) || (is_array($data) && !isset($data['relation_id']))) {
 				return parent::prepareTableValue(null);
 			}
@@ -812,10 +771,6 @@
 		/*-------------------------------------------------------------------------
 			Filtering:
 		-------------------------------------------------------------------------*/
-
-		public function buildDSRetrivalSQL($data, &$joins, &$where, $andOperation = false) {
-			return $this->buildDSRetrievalSQL($data, $joins, $where, $andOperation);
-		}
 
 		public function buildDSRetrievalSQL($data, &$joins, &$where, $andOperation = false) {
 			$field_id = $this->get('id');

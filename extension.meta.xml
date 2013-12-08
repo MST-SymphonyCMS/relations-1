@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<extension id="relation" status="released" xmlns="http://symphony-cms.com/schemas/extension/1.0">
-	<name>Relation</name>
+<extension id="relations" status="experimental" xmlns="http://symphony-cms.com/schemas/extension/1.0">
+	<name>Relations</name>
 
-	<description>Relation field with different views.</description>
+	<description>Provides fields that display relations between sections in various views.</description>
 
-	<repo type="github">https://github.com/vald-ghita/relation_field</repo>
+	<repo type="github">https://github.com/vald-ghita/relations</repo>
 
 	<types>
 		<type>Field Types</type>
@@ -19,8 +19,8 @@
 	</authors>
 
 	<releases>
-		<release version="1.0.0" date="2013-12-05" min="2.3.4">
-			* First release.
-		</release>
+		<!--<release version="1.0.0" date="2013-12-05" min="2.3.4">-->
+			<!--* First release.-->
+		<!--</release>-->
 	</releases>
 </extension>
