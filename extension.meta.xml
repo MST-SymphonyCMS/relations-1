@@ -7,7 +7,8 @@
 	<repo type="github">https://github.com/vald-ghita/relations</repo>
 
 	<types>
-		<type>Field Types</type>
+		<type>Field types</type>
+		<type>Interface</type>
 	</types>
 
 	<authors>
@@ -19,8 +20,8 @@
 	</authors>
 
 	<releases>
-		<!--<release version="1.0.0" date="2013-12-05" min="2.3.4">-->
-			<!--* First release.-->
-		<!--</release>-->
+		<release version="1.0.0" date="2013-12-05" min="2.3.4">
+			* First release.
+		</release>
 	</releases>
 </extension>
